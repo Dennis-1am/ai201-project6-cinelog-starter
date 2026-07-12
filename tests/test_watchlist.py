@@ -99,3 +99,36 @@ def test_add_to_watchlist_nonexistent_film_raises(app, sample_user):
 
         with pytest.raises(FilmNotFoundError):
             add_to_watchlist(user_id=sample_user, film_id=fake_film_id)
+
+def test_get_watchlist_returns_by_alphabetical(app, sample_user):
+    """
+    get_watchlist() should return films sorted alphabetically.
+    """
+    with app.app_context():
+        from datetime import datetime, timezone, timedelta
+        from models import Film, CollectionEntry
+
+        film_a = Film(title="Alien", year=1979, genre="Horror")
+        film_b = Film(title="Blade Runner", year=1982, genre="Sci-Fi")
+        db.session.add_all([film_a, film_b])
+        db.session.commit()
+
+        earlier = datetime.now(timezone.utc) - timedelta(days=5)
+        later = datetime.now(timezone.utc)
+
+        entry_collection_a = CollectionEntry(user_id=sample_user, film_id=film_a.id, date_added=earlier)
+        entry_collection_b = CollectionEntry(user_id=sample_user, film_id=film_b.id, date_added=later)
+        db.session.add_all([entry_collection_a, entry_collection_b])
+        db.session.commit()
+
+        entry_watchlist_a = WatchlistEntry(user_id=sample_user, film_id=film_a.id, date_added=later)
+        entry_watchlist_b = WatchlistEntry(user_id=sample_user, film_id=film_b.id, date_added=earlier)
+        db.session.add_all([entry_watchlist_a, entry_watchlist_b])
+        db.session.commit()
+
+        watchlist = get_watchlist(sample_user)
+        titles = [f["title"] for f in watchlist]
+
+        # Blade Runner was added later, so it should come first
+        assert titles[0] == "Alien"
+        assert titles[1] == "Blade Runner"
