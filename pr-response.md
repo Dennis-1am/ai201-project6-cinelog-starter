@@ -68,3 +68,5 @@ Manual Test:
 3. Add films to the watch list
 4. Add the same film to the watch list (test the duplicate behavior)
 5. Check the `public` field of the watchlist see it default to `true`
+
+![git log](./Screenshot%202026-07-12%20at%2016.46.40.png)
